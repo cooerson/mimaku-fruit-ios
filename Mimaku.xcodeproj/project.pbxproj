@@ -1,0 +1,283 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		20DDA1EF970C365A16F71374 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7DF371221373A897261298A7 /* Assets.xcassets */; };
+		229F4FAFCCE4D8D575040269 /* MimakuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F05DB2152C122FE4901D5E /* MimakuApp.swift */; };
+		23152D16314E87E3C47EE534 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B26F7EAC7A808C5FFFE2D1 /* LoginView.swift */; };
+		99BFA400835B81EF9DBDA510 /* Fruit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E348EFB80CA934AE6349D8 /* Fruit.swift */; };
+		A6EE48A91A63EE2E53AF976C /* FruitPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FE6B3EA4FC0824FD839260 /* FruitPickerView.swift */; };
+		BE4FB655067616326E635F6E /* EntryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1223631CF363F835C6A29A /* EntryEditorView.swift */; };
+		C13EF01C54AE90CE55661009 /* VaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B996AFD24BCE71F9F303FBF /* VaultView.swift */; };
+		F1A0E0020000000000000002 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A0E0010000000000000001 /* Store.swift */; };
+		F4CF236875A8EF8578448210 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4EFBA7557CDB761B8BB6768 /* API.swift */; };
+		F7627D627DC76F2F1BD0A9C7 /* VaultModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B15F9681C8DB55A45D2767 /* VaultModel.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		15F05DB2152C122FE4901D5E /* MimakuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MimakuApp.swift; sourceTree = "<group>"; };
+		32B26F7EAC7A808C5FFFE2D1 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		6B996AFD24BCE71F9F303FBF /* VaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultView.swift; sourceTree = "<group>"; };
+		77FE6B3EA4FC0824FD839260 /* FruitPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FruitPickerView.swift; sourceTree = "<group>"; };
+		7DF371221373A897261298A7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		86E348EFB80CA934AE6349D8 /* Fruit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fruit.swift; sourceTree = "<group>"; };
+		8B1223631CF363F835C6A29A /* EntryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditorView.swift; sourceTree = "<group>"; };
+		C7B15F9681C8DB55A45D2767 /* VaultModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultModel.swift; sourceTree = "<group>"; };
+		D4EFBA7557CDB761B8BB6768 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		F1A0E0010000000000000001 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EB741EB20F8932ADC61B0107 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3C3442C5B9F6532FA522C9A7 = {
+			isa = PBXGroup;
+			children = (
+				956934E60556FDCE0710C957 /* Mimaku */,
+				CC0F68FE2D81F9614883F277 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		956934E60556FDCE0710C957 /* Mimaku */ = {
+			isa = PBXGroup;
+			children = (
+				15F05DB2152C122FE4901D5E /* MimakuApp.swift */,
+				86E348EFB80CA934AE6349D8 /* Fruit.swift */,
+				D4EFBA7557CDB761B8BB6768 /* API.swift */,
+				F1A0E0010000000000000001 /* Store.swift */,
+				C7B15F9681C8DB55A45D2767 /* VaultModel.swift */,
+				77FE6B3EA4FC0824FD839260 /* FruitPickerView.swift */,
+				32B26F7EAC7A808C5FFFE2D1 /* LoginView.swift */,
+				6B996AFD24BCE71F9F303FBF /* VaultView.swift */,
+				8B1223631CF363F835C6A29A /* EntryEditorView.swift */,
+				7DF371221373A897261298A7 /* Assets.xcassets */,
+			);
+			path = Mimaku;
+			sourceTree = "<group>";
+		};
+		CC0F68FE2D81F9614883F277 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F5BF48AA40CAD7891EB709FC /* Mimaku.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		42AEFBAE01D2DFD981F7DA7D /* Mimaku */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9CB938BFDD04126E260AD355 /* Build configuration list for PBXNativeTarget "Mimaku" */;
+			buildPhases = (
+				78B9FD9EA24CAE7E052DA17C /* Sources */,
+				EB741EB20F8932ADC61B0107 /* Frameworks */,
+				966E70EE9C017A93B235DDBA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Mimaku;
+			productName = Mimaku;
+			productReference = F5BF48AA40CAD7891EB709FC /* Mimaku.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					42AEFBAE01D2DFD981F7DA7D = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = C65C31100E411CC42337DAE2 /* Build configuration list for PBXProject "Mimaku" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = 3C3442C5B9F6532FA522C9A7;
+			productRefGroup = CC0F68FE2D81F9614883F277 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D /* Mimaku */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		966E70EE9C017A93B235DDBA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20DDA1EF970C365A16F71374 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		78B9FD9EA24CAE7E052DA17C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				229F4FAFCCE4D8D575040269 /* MimakuApp.swift in Sources */,
+				99BFA400835B81EF9DBDA510 /* Fruit.swift in Sources */,
+				F4CF236875A8EF8578448210 /* API.swift in Sources */,
+				F1A0E0020000000000000002 /* Store.swift in Sources */,
+				F7627D627DC76F2F1BD0A9C7 /* VaultModel.swift in Sources */,
+				A6EE48A91A63EE2E53AF976C /* FruitPickerView.swift in Sources */,
+				23152D16314E87E3C47EE534 /* LoginView.swift in Sources */,
+				C13EF01C54AE90CE55661009 /* VaultView.swift in Sources */,
+				BE4FB655067616326E635F6E /* EntryEditorView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0C829F5ECA5AFF9A04279CFA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BPM9H5473R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "水果密码";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.mimaku.fruit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		17C9FA98C42090BEC5171F39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		313B876248B4ED7F2B543F47 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BPM9H5473R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "水果密码";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.mimaku.fruit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A8EF5E610A1D6D271AE08B8B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9CB938BFDD04126E260AD355 /* Build configuration list for PBXNativeTarget "Mimaku" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				313B876248B4ED7F2B543F47 /* Debug */,
+				0C829F5ECA5AFF9A04279CFA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C65C31100E411CC42337DAE2 /* Build configuration list for PBXProject "Mimaku" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				17C9FA98C42090BEC5171F39 /* Debug */,
+				A8EF5E610A1D6D271AE08B8B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}
