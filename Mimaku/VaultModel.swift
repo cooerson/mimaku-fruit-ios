@@ -161,14 +161,6 @@ final class VaultModel: ObservableObject {
         }
     }
 
-    /// 把一个新密码写进指定条目（顶部「水果密码」按钮用）。
-    @discardableResult
-    func applyPassword(_ password: String, to id: String) async -> Bool {
-        guard var entry = entries.first(where: { $0.id == id }) else { return false }
-        entry.password = password
-        return await save(entry)
-    }
-
     @discardableResult
     func delete(id: String) async -> Bool {
         guard let userID else { return false }

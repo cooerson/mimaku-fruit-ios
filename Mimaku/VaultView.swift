@@ -11,7 +11,6 @@ struct VaultView: View {
     @State private var showPasswordChange = false
     @State private var showImport = false
     @State private var exportItem: ExportItem?
-    @State private var generatorTarget: String?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -34,8 +33,8 @@ struct VaultView: View {
         .background(Color.mimakuGrid)
         .sheet(isPresented: $showGenerator) {
             SheetCard {
-                FruitPickerView(title: "生成器", buttonTitle: "写入条目", showsAuto: true) { password in
-                    applyGenerated(password)
+                FruitPickerView(title: "生成器", buttonTitle: "复制密码", showsAuto: true) { password in
+                    copyGenerated(password)
                 }
             }
         }
@@ -215,23 +214,13 @@ struct VaultView: View {
     }
 
     private func openGenerator() {
-        guard let target = model.selectedID ?? model.entries.first?.id else {
-            model.showBanner("先新建一条再写入")
-            return
-        }
-        generatorTarget = target
         showGenerator = true
     }
 
-    private func applyGenerated(_ password: String) {
-        guard let target = generatorTarget else { return }
+    private func copyGenerated(_ password: String) {
+        UIPasteboard.general.string = password
         showGenerator = false
-        path.append(target)
-        Task {
-            if await model.applyPassword(password, to: target) {
-                model.showBanner("已写入密码")
-            }
-        }
+        model.showBanner("已复制水果密码")
     }
 
     private func export() {

@@ -7,9 +7,10 @@ struct FruitPickerView: View {
     var title: String = "生成器"
     var buttonTitle: String = "一键登录"
     var showsAuto = false
+    var showsRefresh = false
     var onSubmit: (String) -> Void
 
-    @State private var layout: [Fruit] = Fruit.all.shuffled()
+    @State private var layout: [Fruit] = Fruit.all
     @State private var selected: [Fruit] = []
     @State private var tooMany = false
 
@@ -58,9 +59,30 @@ struct FruitPickerView: View {
         .padding(.top, 16)
         .padding(.bottom, 24)
         .background(Color.white, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .bottomTrailing) {
+            if showsRefresh {
+                refreshButton
+            }
+        }
         .alert("最多只能选择 16 种水果！", isPresented: $tooMany) {
             Button("知道了", role: .cancel) {}
         }
+    }
+
+    private var refreshButton: some View {
+        Button(action: reshuffle) {
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.mimakuGreen)
+                .frame(width: 30, height: 30)
+                .background(Color.mimakuPanel, in: Circle())
+                .overlay(Circle().stroke(Color.mimakuLine, lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.06), radius: 2, y: 1)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 12)
+        .padding(.bottom, 12)
+        .accessibilityLabel("重新排列水果")
     }
 
     private var passwordBox: some View {
@@ -135,13 +157,17 @@ struct FruitPickerView: View {
 
     private var actions: some View {
         HStack(spacing: 8) {
+            Spacer(minLength: 0)
             if showsAuto {
                 Button("自动生成") { autoGenerate() }
                     .buttonStyle(PillButtonStyle(kind: .ghost))
+                    .fixedSize(horizontal: true, vertical: false)
             }
             Button(buttonTitle) { onSubmit(password) }
                 .buttonStyle(PillButtonStyle(kind: .primary))
+                .fixedSize(horizontal: true, vertical: false)
                 .disabled(password.isEmpty)
+            Spacer(minLength: 0)
         }
     }
 
@@ -164,6 +190,11 @@ struct FruitPickerView: View {
     private func autoGenerate() {
         let count = 8 + Int.random(in: 0..<9)
         selected = Array(Fruit.all.shuffled().prefix(count))
+        layout.shuffle()
+    }
+
+    private func reshuffle() {
+        layout.shuffle()
     }
 }
 

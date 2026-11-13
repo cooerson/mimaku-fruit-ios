@@ -21,7 +21,7 @@ struct LoginView: View {
                         .font(.subheadline)
                         .foregroundStyle(Color(red: 0.93, green: 0.95, blue: 1))
 
-                    FruitPickerView(buttonTitle: "一键登录") { password in
+                    FruitPickerView(buttonTitle: "一键登录", showsRefresh: true) { password in
                         Task { await model.login(password: password) }
                     }
                     .frame(maxWidth: 360)
