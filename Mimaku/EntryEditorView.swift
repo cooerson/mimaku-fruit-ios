@@ -1,117 +1,153 @@
 import SwiftUI
 import UIKit
 
+/// 条目编辑页，对应 web 版的 `#editor` 面板。
 struct EntryEditorView: View {
-    @EnvironmentObject private var model: VaultModel
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
-
     let entryID: String
+    @Binding var path: [String]
+
+    @EnvironmentObject private var model: VaultModel
 
     @State private var title = ""
     @State private var url = ""
     @State private var username = ""
     @State private var password = ""
     @State private var notes = ""
-    @State private var reveal = false
-    @State private var showPicker = false
+    @State private var revealPassword = false
+    @State private var showGenerator = false
     @State private var confirmDelete = false
 
     var body: some View {
-        Form {
-            Section {
-                TextField("例如 邮箱、银行", text: $title)
-            } header: {
-                Text("标题")
-            }
-            Section {
-                TextField("https://", text: $url)
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.URL)
-                    .autocorrectionDisabled()
-            } header: {
-                Text("网址")
-            }
-            Section {
-                TextField("选填", text: $username)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            } header: {
-                Text("用户名")
-            }
-            Section {
-                HStack {
-                    if reveal {
-                        TextField("点「点选水果」填入", text: $password)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    } else {
-                        SecureField("点「点选水果」填入", text: $password)
-                    }
-                    Button(reveal ? "隐藏" : "显示") { reveal.toggle() }
-                        .font(.caption)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                backButton
+
+                field("标题", placeholder: "例如 邮箱 / 银行", text: $title)
+                field("网址", placeholder: "https://", text: $url, keyboard: .URL)
+                field("用户名", text: $username)
+
+                passwordField
+
+                VStack(alignment: .leading, spacing: 6) {
+                    label("备注")
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 110)
+                        .padding(6)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.mimakuLine, lineWidth: 2))
                 }
-                Button("点选水果") { showPicker = true }
-                Button("复制") {
-                    UIPasteboard.general.string = password
-                    model.banner = password.isEmpty ? "还没有水果密码" : "已复制水果密码"
+
+                HStack(spacing: 8) {
+                    Button("放进果篮") { save() }
+                        .buttonStyle(PillButtonStyle(kind: .primary))
+                    Button("打开网站") { openWebsite() }
+                        .buttonStyle(PillButtonStyle(kind: .ghost))
+                    Button("删除") { confirmDelete = true }
+                        .buttonStyle(PillButtonStyle(kind: .danger))
                 }
-            } header: {
-                HStack(spacing: 4) {
-                    Image("lock")
-                        .resizable()
-                        .renderingMode(.original)
-                        .scaledToFit()
-                        .frame(width: 14, height: 14)
-                    Text("水果密码")
-                }
+                .padding(.top, 4)
             }
-            Section {
-                TextField("选填", text: $notes, axis: .vertical)
-                    .lineLimit(3...6)
-            } header: {
-                Text("备注")
-            }
-            Section {
-                Button("放进果篮") { save() }
-                    .disabled(model.busy)
-                Button("打开网站") { openSite() }
-                Button("删除", role: .destructive) { confirmDelete = true }
-            }
+            .padding(16)
         }
-        .navigationTitle(title.isEmpty ? "新条目" : title)
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color.white)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear(perform: load)
-        .sheet(isPresented: $showPicker) {
-            NavigationStack {
-                ScrollView {
-                    FruitPickerView(buttonTitle: "填入", showsAuto: true) { code in
-                        password = code
-                        reveal = true
-                        showPicker = false
-                        model.banner = "已填入，点「放进果篮」才会保存"
-                    }
-                    .padding(18)
-                }
-                .navigationTitle("水果密码")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("关闭") { showPicker = false }
-                    }
+        .sheet(isPresented: $showGenerator) {
+            SheetCard {
+                FruitPickerView(title: "生成器", buttonTitle: "写入条目", showsAuto: true) { generated in
+                    password = generated
+                    revealPassword = true
+                    showGenerator = false
+                    model.showBanner("已写入，记得保存")
                 }
             }
         }
-        .confirmationDialog("删除这条？", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("删除", role: .destructive) {
-                Task {
-                    if await model.delete(id: entryID) {
-                        dismiss()
+        .alert("删除这条记录？", isPresented: $confirmDelete) {
+            Button("删除", role: .destructive) { delete() }
+            Button("取消", role: .cancel) {}
+        }
+    }
+
+    private var backButton: some View {
+        Button {
+            if !path.isEmpty { path.removeLast() }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "chevron.left")
+                Text("返回")
+            }
+            .font(.subheadline.weight(.bold))
+            .foregroundStyle(Color.mimakuInk)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Color.mimakuPanel, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func field(
+        _ title: String,
+        placeholder: String = "",
+        text: Binding<String>,
+        keyboard: UIKeyboardType = .default
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            label(title)
+            TextField(placeholder, text: text)
+                .keyboardType(keyboard)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, 12)
+                .padding(.vertical, 11)
+                .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.mimakuLine, lineWidth: 2))
+        }
+    }
+
+    private var passwordField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 5) {
+                FruitIcon(key: "lock", size: 15)
+                Text("水果密码")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.mimakuGreen)
+            }
+
+            HStack(spacing: 6) {
+                Group {
+                    if revealPassword {
+                        TextField("", text: $password)
+                    } else {
+                        SecureField("", text: $password)
                     }
                 }
+                .font(.system(.body, design: .monospaced))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, 12)
+                .padding(.vertical, 11)
+                .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.mimakuLine, lineWidth: 2))
+            }
+
+            HStack(spacing: 6) {
+                Button(revealPassword ? "隐藏" : "显示") { revealPassword.toggle() }
+                    .buttonStyle(PillButtonStyle(kind: .ghost))
+                Button("点选水果") { showGenerator = true }
+                    .buttonStyle(PillButtonStyle(kind: .primary))
+                Button("复制") { copyPassword() }
+                    .buttonStyle(PillButtonStyle(kind: .ghost))
             }
         }
     }
+
+    private func label(_ text: String) -> some View {
+        Text(text)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.mimakuGreen)
+    }
+
+    // MARK: - 操作
 
     private func load() {
         guard let entry = model.entries.first(where: { $0.id == entryID }) else { return }
@@ -125,26 +161,49 @@ struct EntryEditorView: View {
     private func save() {
         let entry = Entry(
             id: entryID,
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "新条目" : title.trimmingCharacters(in: .whitespacesAndNewlines),
-            url: url.trimmingCharacters(in: .whitespacesAndNewlines),
-            username: username.trimmingCharacters(in: .whitespacesAndNewlines),
+            title: title,
+            url: url,
+            username: username,
             password: password,
             notes: notes
         )
-        Task { await model.save(entry) }
+        Task {
+            if await model.save(entry), !path.isEmpty {
+                path.removeLast()
+            }
+        }
     }
 
-    private func openSite() {
-        let raw = url.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else {
-            model.banner = "还没有网址"
+    private func delete() {
+        Task {
+            if await model.delete(id: entryID), !path.isEmpty {
+                path.removeLast()
+            }
+        }
+    }
+
+    private func copyPassword() {
+        guard !password.isEmpty else {
+            model.showBanner("还没有密码")
             return
         }
-        let text = raw.hasPrefix("http://") || raw.hasPrefix("https://") ? raw : "https://\(raw)"
-        guard let link = URL(string: text) else {
-            model.banner = "网址打不开"
+        UIPasteboard.general.string = password
+        model.showBanner("已复制密码")
+    }
+
+    private func openWebsite() {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            model.showBanner("还没有填写网站")
             return
         }
-        openURL(link)
+        let target = trimmed.lowercased().hasPrefix("http://") || trimmed.lowercased().hasPrefix("https://")
+            ? trimmed
+            : "https://" + trimmed
+        guard let link = URL(string: target) else {
+            model.showBanner("网址格式不对")
+            return
+        }
+        UIApplication.shared.open(link)
     }
 }

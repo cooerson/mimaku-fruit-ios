@@ -1,18 +1,20 @@
 import Foundation
 import Security
 
+/// 把当前登录的果篮 id 放进钥匙串，下次打开 App 直接回到果篮里。
 enum Keychain {
     private static let service = "org.mimaku.fruit"
-    private static let account = "token"
+    private static let account = "session"
 
-    static func save(_ token: String) {
+    static func save(_ value: String) {
         clear()
-        let data = Data(token.utf8)
+        guard let data = value.data(using: .utf8) else { return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecValueData as String: data
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
         SecItemAdd(query as CFDictionary, nil)
     }
@@ -27,8 +29,10 @@ enum Keychain {
         ]
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+              let data = item as? Data,
+              let value = String(data: data, encoding: .utf8)
+        else { return nil }
+        return value
     }
 
     static func clear() {
@@ -43,224 +47,236 @@ enum Keychain {
 
 @MainActor
 final class VaultModel: ObservableObject {
-    @Published var token: String?
-    @Published var entries: [Entry] = []
-    @Published var busy = false
+    @Published private(set) var userID: String?
+    @Published private(set) var entries: [Entry] = []
+    @Published private(set) var busy = false
+    @Published private(set) var loadingList = false
     @Published var banner: String?
     @Published var loginError: String?
     @Published var loadError: String?
-    @Published var accountIsNew = false
-    @Published var loadingList = false
+    @Published var query = ""
+    @Published var selectedID: String?
 
     private let store = Store()
-    private var requestGeneration = 0
+    private var generation = 0
+    private var bannerTask: Task<Void, Never>?
+
+    var isLocked: Bool { userID == nil }
+
+    var filteredEntries: [Entry] {
+        let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !keyword.isEmpty else { return entries }
+        return entries.filter {
+            ($0.title + " " + $0.username + " " + $0.url).lowercased().contains(keyword)
+        }
+    }
 
     init() {
         do {
             try store.open()
         } catch {
-            loginError = error.localizedDescription
-            return
+            loadError = error.localizedDescription
         }
-        if let saved = Keychain.load(), store.userExists(saved) {
-            token = saved
-            loadingList = true
-            Task { await refresh(silent: true) }
-        } else {
-            Keychain.clear()
-        }
+        Task { await restoreSession() }
     }
+
+    // MARK: - 登录与退出
 
     func login(password: String) async {
-        let generation = nextGeneration()
         loginError = nil
-        loadingList = true
-        await run(generation: generation) {
-            let store = self.store
-            let result = try await Task.detached {
-                try store.login(password: password)
-            }.value
-            guard generation == self.requestGeneration else { return }
-            let list = try store.entries(userID: result.userID)
-            guard generation == self.requestGeneration else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let result = try await offload { try $0.login(password: password) }
+            userID = result.userID
             Keychain.save(result.userID)
-            self.entries = list
-            self.accountIsNew = result.created
-            self.loadError = nil
-            self.loadingList = false
-            self.token = result.userID
-            if result.created {
-                self.banner = "这组水果密码是新的，果篮只在这台手机上"
-            } else {
-                self.banner = "已进入果篮，共 \(list.count) 颗"
-            }
+            selectedID = nil
+            query = ""
+            await loadEntries()
+            showBanner(result.created ? "已注册并进入果篮" : "已登录")
+        } catch {
+            loginError = error.localizedDescription
         }
     }
 
-    func refresh(silent: Bool = false) async {
-        let generation = nextGeneration()
-        if entries.isEmpty { loadingList = true }
-        await run(generation: generation, silent: silent) {
-            try await self.loadEntries(generation: generation)
-        }
+    func lock(silent: Bool = false) {
+        Keychain.clear()
+        userID = nil
+        entries = []
+        selectedID = nil
+        query = ""
+        loadError = nil
+        if !silent { showBanner("已退出") }
     }
 
+    private func restoreSession() async {
+        guard loadError == nil, let saved = Keychain.load() else { return }
+        let exists = (try? await offload { $0.userExists(id: saved) }) ?? false
+        guard exists else {
+            Keychain.clear()
+            return
+        }
+        userID = saved
+        await loadEntries()
+    }
+
+    // MARK: - 条目
+
+    func reload() async {
+        await loadEntries()
+    }
+
+    @discardableResult
     func createEmpty() async -> Entry? {
-        var created: Entry?
-        await run {
-            guard let userID = self.token else { throw APIError.unauthorized("请先进入果篮") }
-            created = try self.store.create(Entry(title: "新条目"), userID: userID)
-            if let created {
-                var list = self.entries
-                list.insert(created, at: 0)
-                self.entries = list
+        guard let userID else { return nil }
+        do {
+            let created = try await offload {
+                try $0.create(Entry(title: "新条目"), userID: userID)
             }
-            self.banner = "已新建"
+            entries.insert(created, at: 0)
+            selectedID = created.id
+            showBanner("已新建")
+            return created
+        } catch {
+            showBanner(error.localizedDescription)
+            return nil
         }
-        return created
     }
 
+    @discardableResult
     func save(_ entry: Entry) async -> Bool {
-        var ok = false
-        await run {
-            guard let userID = self.token else { throw APIError.unauthorized("请先进入果篮") }
-            let saved = try self.store.update(entry, userID: userID)
-            if let index = self.entries.firstIndex(where: { $0.id == saved.id }) {
-                var list = self.entries
-                list[index] = saved
-                self.entries = list
+        guard let userID, !entry.id.isEmpty else { return false }
+        do {
+            let saved = try await offload {
+                try $0.update(id: entry.id, userID: userID, with: entry)
             }
-            self.banner = "已放进果篮"
-            ok = true
+            if let index = entries.firstIndex(where: { $0.id == saved.id }) {
+                entries[index] = saved
+            }
+            showBanner("已保存")
+            return true
+        } catch {
+            showBanner(error.localizedDescription)
+            return false
         }
-        return ok
     }
 
+    /// 把一个新密码写进指定条目（顶部「水果密码」按钮用）。
+    @discardableResult
+    func applyPassword(_ password: String, to id: String) async -> Bool {
+        guard var entry = entries.first(where: { $0.id == id }) else { return false }
+        entry.password = password
+        return await save(entry)
+    }
+
+    @discardableResult
     func delete(id: String) async -> Bool {
-        var ok = false
-        await run {
-            guard let userID = self.token else { throw APIError.unauthorized("请先进入果篮") }
-            try self.store.delete(id: id, userID: userID)
-            self.entries = self.entries.filter { $0.id != id }
-            self.banner = "已删除"
-            ok = true
+        guard let userID else { return false }
+        do {
+            try await offload { try $0.delete(id: id, userID: userID) }
+            entries.removeAll { $0.id == id }
+            if selectedID == id { selectedID = entries.first?.id }
+            showBanner("已删除")
+            return true
+        } catch {
+            showBanner(error.localizedDescription)
+            return false
         }
-        return ok
     }
 
-    func changePassword(old: String, new: String) async -> Bool {
-        var ok = false
-        await run {
-            guard let userID = self.token else { throw APIError.unauthorized("请先进入果篮") }
-            let store = self.store
-            try await Task.detached {
-                try store.changePassword(userID: userID, old: old, new: new)
-            }.value
-            self.banner = "水果密码已更换"
-            ok = true
-        }
-        return ok
-    }
-
-    func importPack(_ data: Data) async {
-        await run {
-            guard let userID = self.token else { throw APIError.unauthorized("请先进入果篮") }
-            let entries = try Self.decodeImport(data)
-            let result = try self.store.importEntries(entries, userID: userID)
-            try await self.loadEntries(generation: self.requestGeneration)
-            if result.skipped > 0 {
-                self.banner = "已导入 \(result.imported) 颗，跳过 \(result.skipped) 颗重复"
-            } else {
-                self.banner = "已导入 \(result.imported) 颗"
+    func changePassword(old: String, new: String) async -> String? {
+        guard let userID else { return "请先登录" }
+        do {
+            try await offload {
+                try $0.changePassword(userID: userID, old: old, new: new)
             }
+            showBanner("主密码已修改")
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    // MARK: - 导入导出
+
+    func importPack(_ data: Data) async -> String {
+        guard let userID else { return "请先登录" }
+        do {
+            let list = try Self.decodeImport(data)
+            let result = try await offload {
+                try $0.importEntries(list, userID: userID)
+            }
+            await loadEntries()
+            return result.skipped > 0
+                ? "已导入 \(result.imported) 条，跳过 \(result.skipped) 条重复"
+                : "已导入 \(result.imported) 条"
+        } catch {
+            return error.localizedDescription
         }
     }
 
     func exportFile() throws -> URL {
-        struct Pack: Encodable { var entries: [Entry] }
-        let data = try JSONEncoder.pretty.encode(Pack(entries: entries))
+        let data = try JSONEncoder.pretty.encode(ExportPack(entries: entries))
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("vault-v2-backup.json")
         try data.write(to: url, options: .atomic)
         return url
     }
 
-    func lock() {
-        requestGeneration += 1
-        token = nil
-        entries = []
-        accountIsNew = false
-        loadError = nil
-        loadingList = false
-        Keychain.clear()
-        banner = "已退出"
-    }
+    // MARK: - 提示条
 
-    private func nextGeneration() -> Int {
-        requestGeneration += 1
-        return requestGeneration
-    }
-
-    private func loadEntries(generation: Int) async throws {
-        guard let userID = token else { throw APIError.unauthorized("请先进入果篮") }
-        let list = try store.entries(userID: userID)
-        guard generation == requestGeneration else { return }
-        entries = list
-        loadError = nil
-        loadingList = false
-    }
-
-    private func run(generation: Int? = nil, silent: Bool = false, _ work: () async throws -> Void) async {
-        let generation = generation ?? requestGeneration
-        busy = true
-        defer {
-            if generation == requestGeneration {
-                busy = false
-                loadingList = false
-            }
+    func showBanner(_ text: String) {
+        banner = text
+        bannerTask?.cancel()
+        bannerTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            guard !Task.isCancelled else { return }
+            self?.banner = nil
         }
+    }
+
+    // MARK: - 内部
+
+    private func loadEntries() async {
+        guard let userID else { return }
+        generation += 1
+        let current = generation
+        loadingList = true
+        defer { if current == generation { loadingList = false } }
         do {
-            try await work()
-        } catch let error as APIError {
-            guard generation == requestGeneration else { return }
-            if case .unauthorized = error {
-                lock()
+            let list = try await offload { try $0.entries(userID: userID) }
+            guard current == generation else { return }
+            entries = list
+            if let selectedID, !list.contains(where: { $0.id == selectedID }) {
+                self.selectedID = nil
             }
-            if token == nil {
-                loginError = error.localizedDescription
-            } else {
-                loadError = error.localizedDescription
-            }
-            if !silent || !isUnauthorized(error) {
-                banner = error.localizedDescription
-            }
+            loadError = nil
         } catch {
-            guard generation == requestGeneration else { return }
-            if token == nil {
-                loginError = error.localizedDescription
-            } else {
-                loadError = error.localizedDescription
-            }
-            banner = error.localizedDescription
+            guard current == generation else { return }
+            loadError = error.localizedDescription
         }
     }
 
-    private func isUnauthorized(_ error: APIError) -> Bool {
-        if case .unauthorized = error { return true }
-        return false
+    /// 所有 SQLite 读写都放到后台线程，避免阻塞主线程导致界面卡顿。
+    private func offload<T: Sendable>(_ work: @escaping @Sendable (Store) throws -> T) async throws -> T {
+        let store = self.store
+        return try await Task.detached(priority: .userInitiated) { try work(store) }.value
     }
 
-    private static func decodeImport(_ data: Data) throws -> [Entry] {
-        if let pack = try? JSONDecoder().decode(ImportPack.self, from: data) {
+    nonisolated private static func decodeImport(_ data: Data) throws -> [Entry] {
+        let decoder = JSONDecoder()
+        if let pack = try? decoder.decode(ExportPack.self, from: data) {
             return pack.entries
         }
-        if let list = try? JSONDecoder().decode([Entry].self, from: data) {
+        if let list = try? decoder.decode([Entry].self, from: data) {
             return list
         }
-        throw APIError.message("这个文件不是水果密码的备份")
+        throw StoreError.message("文件格式不对")
     }
 }
 
-private struct ImportPack: Decodable { var entries: [Entry] }
+private struct ExportPack: Codable {
+    var entries: [Entry]
+}
 
 private extension JSONEncoder {
     static var pretty: JSONEncoder {
